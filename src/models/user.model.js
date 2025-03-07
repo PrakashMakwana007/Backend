@@ -29,17 +29,17 @@ const UserSchema = new Schema(
             trim : true,
             index : true,
            },
-           avatar :{
-            types : string , // url 
-            require : true 
-           },
-           coverImage :{
-            types : string , // url  
-           },
-           refreshTokens :{
-            type : string,
-
-           },
+           avatar: {
+            type: String,
+            required: true
+          },
+          coverImage: {
+            type: String,
+          },
+          refreshTokens: {
+            type: String,
+          },
+          
            watchHistory: [
             {
                 type: Schema.Types.ObjectId,
