@@ -225,13 +225,70 @@ const loginuser = asyncHandler(async (req, res) => {
       
  })
   
+const updateAvatar = asyncHandler(async (req,res)=>{
+      
+   const localAvatar = req.file?.path
+   if(!localAvatar){
+    throw new ApiError(400 , "not coming  avatar")
+
+   }
+
+  const  avatar=  await  uplodeOncludeinary(localAvatar)
+
+  if(!avatar.url){
+    throw new ApiError (400 , "error on uploding avatar ")
+  }
+
+  const user =await User.findByIdAndUpdate(
+    req.user._id,
+    {
+      $set : {
+        avatar :avatar.url
+      }
+    }
+  ).select("-pa ssword")
+  
+    return res.status(200).json(new ApiResponse(
+        200,user ,"avatar is update"
+    ))
+})
+const updateCoverimage = asyncHandler(async (req,res)=>{
+      
+    const localCoverimage = req.file?.path
+    if(!localCoverimage){
+     throw new ApiError(400 , "error : files mising covrimage ")
+    }
+ 
+   const  coverImage=  await  uplodeOncludeinary(localCoverimage)
+ 
+   if(!coverImage.url){
+     throw new ApiError (400 , "error on uploding coverImage ")
+   }
+ 
+   const user =await User.findByIdAndUpdate(
+     req.user._id,
+     {
+       $set : {
+         coverImage :coverImage.url
+       }
+     }
+   ).select("-pa ssword")
+   
+     return res.status(200).json(new ApiResponse(
+         200,user ,"coverImage is update"
+     ))
+ })
+
+
 export {
     registeruser,
     loginuser,
     logoutuser,
     refreshAccesstoken,
     getCurrntuser,
-    changePassword
+    changePassword,
+    updateAvatar,
+    updateCoverimage
     
 
  }  

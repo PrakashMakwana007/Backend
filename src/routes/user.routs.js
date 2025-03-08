@@ -1,9 +1,17 @@
 import {Router} from "express"
-import {registeruser , loginuser , logoutuser ,refreshAccesstoken
-      , changePassword,getCurrntuser,
-} from  "../controller/user.control.js"
+import {registeruser , 
+       loginuser ,
+       logoutuser ,
+       refreshAccesstoken,
+       changePassword,
+       getCurrntuser,
+       updateAvatar,
+       updateCoverimage,
+       }
+        from  "../controller/user.control.js"
 import { upload } from "../middlewares/multer.js"
 import { verifyJWT } from "../middlewares/auth.middle.js"
+
 
 const router = Router()
 
@@ -28,6 +36,8 @@ router.route("/logout").post(verifyJWT, logoutuser)
 router.route("/refresh-token").post(refreshAccesstoken)
 router.route("/chanje-password").post(verifyJWT,changePassword)
 router.route("/getCurrentuser").post(verifyJWT,getCurrntuser)
+router.route("/updateAvatar").post(verifyJWT,updateAvatar)
+router.route("/updateCoverimage").post(verifyJWT,updateCoverimage)
 
 
 export default router 
