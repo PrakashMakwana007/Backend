@@ -279,6 +279,85 @@ const updateCoverimage = asyncHandler(async (req,res)=>{
      ))
  })
 
+const chanelprofile = asyncHandler(async(req,res)=>{
+    const  { username } = req.params
+
+    if(!username){
+      throw new ApiError(401 , "username  is  reqired")
+    }
+    
+   const chenal = await User.aggregate([
+    {
+      $match: {
+        username : username?.toLowerCase()
+      }
+    },
+    {
+      $lookup : {
+        from : "subcripations",
+        localField:"_Id",
+        foreignField:"chanel",
+        as : "subscriber"
+      }
+    },
+    {
+      $lookup : {
+        from : "subcripations",
+        localField:"_Id",
+        foreignField:"subscriber",
+        as : "subscribedTo"
+      }
+
+    },
+    {
+      $addFields:{
+       subscriberCount :{
+          $size :"$subscribers"
+        },
+        subscribedtoCount :{
+          $size : "$subscribedTo"
+        },
+        isSubcribed :{
+          if: {$in :[req.user?._Id, "$subscribers . subscriber"]},
+          then : true,
+          else : false
+        }
+      }
+    },
+    {
+      $project:{
+         username :1,
+         subscriberCount:1,
+         subscribedtoCount:1,
+         fullname:1,
+         avatar:1,
+         coverImage:1,
+         email : 1,
+         createAt : 1
+      }
+    }
+   ])
+   console.log("chanel:",chenal)
+
+
+   if(!chenal?.length){
+    throw new ApiError(400,"chanel is  reqired ")
+   }
+
+   return res.status(200).json(
+    new ApiResponse(200,
+      chenal[0],
+      "user channel fatced succeess"
+    )
+   )
+})
+
+
+
+
+
+
+
 
 export {
     registeruser,
@@ -288,7 +367,6 @@ export {
     getCurrntuser,
     changePassword,
     updateAvatar,
-    updateCoverimage
-    
-
+    updateCoverimage,
+    chanelprofile
  }  

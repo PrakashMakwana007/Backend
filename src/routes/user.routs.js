@@ -7,6 +7,7 @@ import {registeruser ,
        getCurrntuser,
        updateAvatar,
        updateCoverimage,
+       chanelprofile
        }
         from  "../controller/user.control.js"
 import { upload } from "../middlewares/multer.js"
@@ -38,6 +39,6 @@ router.route("/chanje-password").post(verifyJWT,changePassword)
 router.route("/getCurrentuser").post(verifyJWT,getCurrntuser)
 router.route("/updateAvatar").post(verifyJWT,updateAvatar)
 router.route("/updateCoverimage").post(verifyJWT,updateCoverimage)
-
+router.route("/chanel-profile").post(verifyJWT,chanelprofile)
 
 export default router 
