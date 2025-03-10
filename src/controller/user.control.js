@@ -4,6 +4,7 @@ import  {User} from "../models/user.model.js"
 import {uplodeOncludeinary} from "../utils/cludeinary.js"
 import ApiResponse from "../utils/ApiResponse.js"
 import jwt from "jsonwebtoken"
+import mongoose from "mongoose"
 
 
 
@@ -239,14 +240,13 @@ const updateAvatar = asyncHandler(async (req,res)=>{
     throw new ApiError (400 , "error on uploding avatar ")
   }
 
-  const user =await User.findByIdAndUpdate(
+  await User.findByIdAndUpdate(
     req.user._id,
-    {
-      $set : {
-        avatar :avatar.url
-      }
-    }
-  ).select("-pa ssword")
+    { $set: { avatar: avatar.url } }
+);
+
+const user = await User.findById(req.user._id).select("-password"); // ✅ Proper way to exclude
+
   
     return res.status(200).json(new ApiResponse(
         200,user ,"avatar is update"
@@ -265,92 +265,139 @@ const updateCoverimage = asyncHandler(async (req,res)=>{
      throw new ApiError (400 , "error on uploding coverImage ")
    }
  
-   const user =await User.findByIdAndUpdate(
+   await User.findByIdAndUpdate(
      req.user._id,
      {
        $set : {
          coverImage :coverImage.url
        }
      }
-   ).select("-pa ssword")
+   )
+   const user = await User.findById(req.user._id).select("-password");
    
      return res.status(200).json(new ApiResponse(
          200,user ,"coverImage is update"
      ))
  })
 
-const chanelprofile = asyncHandler(async(req,res)=>{
-    const  { username } = req.params
+ const chanelprofile = asyncHandler(async (req, res) => {
+  const { username } = req.body;  
+  console.log("username:",req.body)
 
-    if(!username){
-      throw new ApiError(401 , "username  is  reqired")
-    }
-    
-   const chenal = await User.aggregate([
-    {
-      $match: {
-        username : username?.toLowerCase()
-      }
-    },
-    {
-      $lookup : {
-        from : "subcripations",
-        localField:"_Id",
-        foreignField:"chanel",
-        as : "subscriber"
-      }
-    },
-    {
-      $lookup : {
-        from : "subcripations",
-        localField:"_Id",
-        foreignField:"subscriber",
-        as : "subscribedTo"
-      }
+  if (!username) {
+      throw new ApiError(401, "Username is required");
+  }
 
-    },
-    {
-      $addFields:{
-       subscriberCount :{
-          $size :"$subscribers"
+  const channel = await User.aggregate([
+      {
+          $match: {
+              username: username.toLowerCase() 
+          }
+      },
+      {
+          $lookup: {
+              from: "subscriptions",  
+              localField: "_id",
+              foreignField: "chanel",
+              as: "subscriber"
+          }
+      },
+      {
+          $lookup: {
+              from: "subscriptions",
+              localField: "_id",
+              foreignField: "subscriber",
+              as: "subscribedTo"
+          }
+      },
+      {
+          $addFields: {
+              subscriberCount: { $size: "$subscriber" },  
+              subscribedtoCount: { $size: "$subscribedTo" },
+              isSubscribed: {
+                  $cond: {
+                      if: { $in: [req.user?._id, "$subscriber.subscriber"] },  
+                      then: true,
+                      else: false
+                  }
+              }
+          }
+      },
+      {
+          $project: {
+              username: 1,
+              subscriberCount: 1,
+              subscribedtoCount: 1,
+              fullname: 1,
+              avatar: 1,
+              coverImage: 1,
+              email: 1,
+              createdAt: 1  // ✅ Fix typo `createAt` → `createdAt`
+          }
+      }
+  ]);
+
+  console.log("Channel:", channel);
+
+  if (!channel.length) {
+      throw new ApiError(400, "Channel not found");
+  }
+
+  return res.status(200).json(
+      new ApiResponse(200, channel[0], "User channel fetched successfully")
+  );
+});
+
+const watchHistroy = asyncHandler(async(req,res)=>{
+     const user =await  User.aggregate([
+        {
+            $match:{
+                _id :new mongoose.Types.ObjectId(req.user._id)
+            }
         },
-        subscribedtoCount :{
-          $size : "$subscribedTo"
-        },
-        isSubcribed :{
-          if: {$in :[req.user?._Id, "$subscribers . subscriber"]},
-          then : true,
-          else : false
+        {
+            $lookup:{
+                from:"videos",
+                foreignField:"_id",
+                localField:"watchHistory",
+                as:"watchHistory",
+                pipeline:[
+                    {
+                        $lookup:{
+                            from:"users",
+                            foreignField:"_id",
+                            localField:"owner",
+                            as:"owner",
+                            pipeline:[
+                                {
+                                    $project:{
+                                        username:1,
+                                        fullname:1,
+                                        avatar:1
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        $addFields:{
+                            owner: { $arrayElemAt: ["$owner", 0] }
+                        }
+                    }
+                ]
+            }
         }
-      }
-    },
-    {
-      $project:{
-         username :1,
-         subscriberCount:1,
-         subscribedtoCount:1,
-         fullname:1,
-         avatar:1,
-         coverImage:1,
-         email : 1,
-         createAt : 1
-      }
-    }
-   ])
-   console.log("chanel:",chenal)
+     ])
+     if(!user.length){
+        throw ApiError(400 ,"user  is not valid  for  watchHistroy")
+     }
 
 
-   if(!chenal?.length){
-    throw new ApiError(400,"chanel is  reqired ")
-   }
-
-   return res.status(200).json(
-    new ApiResponse(200,
-      chenal[0],
-      "user channel fatced succeess"
-    )
-   )
+     return res.status(200).json(
+        new ApiResponse(200,user[0].watchHistroy,"watchHistroy add success")
+     )
 })
+
 
 
 
@@ -368,5 +415,6 @@ export {
     changePassword,
     updateAvatar,
     updateCoverimage,
-    chanelprofile
+    chanelprofile,
+    watchHistroy
  }  
