@@ -348,63 +348,57 @@ const updateCoverimage = asyncHandler(async (req,res)=>{
   );
 });
 
-const watchHistroy = asyncHandler(async(req,res)=>{
-     const user =await  User.aggregate([
+
+
+const watchHistory = asyncHandler(async (req, res) => {
+    const user = await User.aggregate([ 
         {
-            $match:{
-                _id :new mongoose.Types.ObjectId(req.user._id)
+            $match: {
+                _id: new mongoose.Types.ObjectId(req.user._id)
             }
         },
         {
-            $lookup:{
-                from:"videos",
-                foreignField:"_id",
-                localField:"watchHistory",
-                as:"watchHistory",
-                pipeline:[
+            $lookup: {
+                from: "videos",
+                foreignField: "_id",
+                localField: "watchHistory",
+                as: "watchHistory",
+                pipeline: [
                     {
-                        $lookup:{
-                            from:"users",
-                            foreignField:"_id",
-                            localField:"owner",
-                            as:"owner",
-                            pipeline:[
+                        $lookup: {
+                            from: "users",
+                            foreignField: "_id",
+                            localField: "owner",
+                            as: "owner",
+                            pipeline: [
                                 {
-                                    $project:{
-                                        username:1,
-                                        fullname:1,
-                                        avatar:1
+                                    $project: {
+                                        username: 1,
+                                        fullname: 1,
+                                        avatar: 1
                                     }
                                 }
                             ]
                         }
                     },
                     {
-                        $addFields:{
+                        $addFields: {
                             owner: { $arrayElemAt: ["$owner", 0] }
                         }
                     }
                 ]
             }
         }
-     ])
-     if(!user.length){
-        throw ApiError(400 ,"user  is not valid  for  watchHistroy")
-     }
+    ]);
 
+    if (!user.length) {
+        throw new ApiError(400, "User is not valid for watch history");
+    }
 
-     return res.status(200).json(
-        new ApiResponse(200,user[0].watchHistroy,"watchHistroy add success")
-     )
-})
-
-
-
-
-
-
-
-
+    return res.status(200).json(
+        new ApiResponse(200, user[0].watchHistory, "Fetched watch history successfully")
+    );
+});
 
 export {
     registeruser,
@@ -416,5 +410,5 @@ export {
     updateAvatar,
     updateCoverimage,
     chanelprofile,
-    watchHistroy
+    watchHistory
  }  

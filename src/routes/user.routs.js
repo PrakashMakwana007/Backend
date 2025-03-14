@@ -8,11 +8,11 @@ import {registeruser ,
        updateAvatar,
        updateCoverimage,
        chanelprofile,
-       watchHistroy
+       watchHistory
        }
         from  "../controller/user.control.js"
-import { upload } from "../middlewares/multer.js"
 import { verifyJWT } from "../middlewares/auth.middle.js"
+import { upload } from "../middlewares/multer.js"
 
 
 const router = Router()
@@ -41,7 +41,7 @@ router.route("/getCurrentuser").post(verifyJWT,getCurrntuser)
 router.route("/updateAvatar").post(verifyJWT,upload.single("avatar"),updateAvatar)
 router.route("/updateCoverimage").post(verifyJWT,upload.single("coverImage"),updateCoverimage)
 router.route("/chanel-profile").post(verifyJWT,chanelprofile)
-router.route("/watchHistory").get(verifyJWT,watchHistroy)
+router.route("/watchHistory").get(verifyJWT,watchHistory)
 
 
 export default router 
