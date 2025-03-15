@@ -9,14 +9,14 @@ const commentSchema = new Schema(
      },
       video:{
         type : mongoose.Types.ObjectId,
-        trf : "Video"
+        ref: "Video"
       },
       owner :{
         type : mongoose.Types.ObjectId,
-        trf : "User"
+        ref : "User"
       }
     },
-    {
+    { 
         timestamps:true
     }
 )

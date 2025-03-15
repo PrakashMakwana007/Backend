@@ -1,10 +1,10 @@
 import { Router } from "express";
 import {
-       cratePlaylist,
+       createPlaylist,
        getPlaylistById,
-       getUserpalyList,
-       addVideo,
+       getUserPlaylist,
        removeVideo,
+       addVideo,
        updatePlaylist,
        deletePlaylist
 }
@@ -19,13 +19,13 @@ const router = Router()
 
 router.use(verifyJWT)
 
-router.route("/").post(cratePlaylist)
+router.route("/").post(createPlaylist)
   
-router.route("/user/:userId").get(getUserpalyList)
-router.route("/playlistId").get(getPlaylistById)
+router.route("/user/:userId").get(getUserPlaylist)
+router.route("/:playlistId").get(getPlaylistById)
 router.route("/add/:videoId/:playlistId").patch(addVideo)
 router.route("/remove/:videoId/:palylistId").patch(removeVideo)
-router.route("/playlistId").patch(updatePlaylist)
-router.route("/playlistid").delete(deletePlaylist)
+router.route("/:playlistId").patch(updatePlaylist)
+router.route("/:playlistid").delete(deletePlaylist)
 
 export default router
