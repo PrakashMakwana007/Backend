@@ -1,33 +1,38 @@
-import React from "react";
-import { useState } from "react";
-
+import React, { useState } from "react";
+import { Menu } from "lucide-react";
 
 const Sidebar = () => {
-    const [open, setOpen] = useState(true);
-    const menuItems = [
-      "Home",
-      "Liked Videos",
-      "History",
-      "Subscribed Channels",
-      "My Channel",
-    ];
-  
-    return (
-      <aside
-        className={`bg-gray-900 text-white h-screen p-4 ${open ? "w-60" : "w-16"} transition-all`}
-      >
-        <button onClick={() => setOpen(!open)} className="mb-4 focus:outline-none">
-          
-        </button>
-        <ul>
-          {menuItems.map((item, index) => (
-            <li key={index} className="p-2 hover:bg-gray-800 cursor-pointer rounded-lg">
-              {item}
-            </li>
-          ))}
-        </ul>
-      </aside>
-    );
-  };
+  const [open, setOpen] = useState(true);
+  const menuItems = [
+    "Home",
+    "Liked Videos",
+    "History",
+    "Subscribed Channels",
+    "My Channel",
+  ];
 
-  export default Sidebar
+  return (
+    <aside
+      className={`bg-gray-900 text-white h-screen p-4 ${open ? "w-64" : "w-20"} transition-all duration-300 flex flex-col`}
+    >
+      <button
+        onClick={() => setOpen(!open)}
+        className="mb-4 flex items-center justify-center p-2 bg-gray-800 rounded-lg hover:bg-gray-700 transition"
+      >
+        <Menu size={24} />
+      </button>
+      <ul className="space-y-4">
+        {menuItems.map((item, index) => (
+          <li
+            key={index}
+            className="flex items-center gap-4 p-3 rounded-lg cursor-pointer hover:bg-blue-600 transition-all text-lg font-semibold"
+          >
+            <span className={`${open ? "block" : "hidden"}`}>{item}</span>
+          </li>
+        ))}
+      </ul>
+    </aside>
+  );
+};
+
+export default Sidebar;
