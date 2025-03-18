@@ -1,4 +1,4 @@
-import { verifyJWT } from "../middlewares/auth.middle";
+import { verifyJWT } from "../middlewares/auth.middle.js";
 import {getLikedvideo,
         commentLike,
         videoLike
