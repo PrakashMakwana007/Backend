@@ -24,8 +24,8 @@ router.route("/").post(createPlaylist)
 router.route("/user/:userId").get(getUserPlaylist)
 router.route("/:playlistId").get(getPlaylistById)
 router.route("/add/:videoId/:playlistId").patch(addVideo)
-router.route("/remove/:videoId/:palylistId").patch(removeVideo)
 router.route("/:playlistId").patch(updatePlaylist)
-router.route("/:playlistid").delete(deletePlaylist)
+router.route("/remove/:videoId/:playlistId").patch(removeVideo);
+router.route("/:playlistId").delete(deletePlaylist);
 
 export default router

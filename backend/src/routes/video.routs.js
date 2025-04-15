@@ -5,7 +5,7 @@ import {
   getVideoById,
   updateVideo,
   deleteVideo,
-  togglePublishStatus
+  togglePublishStatus 
 } from "../controller/video.control.js";
 
 import { upload } from "../middlewares/multer.js";

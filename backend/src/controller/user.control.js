@@ -199,13 +199,18 @@ const loginuser = asyncHandler(async (req, res) => {
  })
 
  const getCurrntuser = asyncHandler(async(req,res)=>{
+    console.log("Current User:", req.user);  // Debugging log
+
+      if(!req.user){
+        throw new ApiError(401,"user not found")
+      }
      return res.status(200).json(
         new ApiResponse(200,req.user,"user  get success")
      )  
 
  })
  const changePassword = asyncHandler(async(req,res)=>{
-    const {oldPassword , newPassword} = req.body
+    const {oldPassword , newPassword} = req.body   
    
     const user = await User.findById(req.user?._id)
     const ispasswordiscorect = await user.checkpassword(oldPassword)
