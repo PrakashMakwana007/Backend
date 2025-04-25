@@ -15,7 +15,7 @@ const toogleSubcribe = asyncHandler(async (req, res) => {
     const existingSubscription = await Subscription.findOne({
         subscriber: userId,
         channel: channelId,
-    });
+    });    
 
     if (existingSubscription) {
         await Subscription.findByIdAndDelete(existingSubscription._id);
@@ -89,7 +89,8 @@ const getsubscribedChannel = asyncHandler(async (req, res) => {
     }
 
     const list = await Subscription.find({ subscriber: subscriberId })
-        .populate("channel", "username email");
+    .populate("channel", "username email avatar description subscribersCount")
+
 
     if (!list || list.length === 0) {
         throw new ApiError(404, "No subscriptions found for this user");

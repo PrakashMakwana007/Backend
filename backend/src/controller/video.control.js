@@ -106,44 +106,45 @@ const getAllVideos = asyncHandler(async (req, res) => {
 });
 
 const publishAVideo = asyncHandler(async (req, res) => {
-    const { title, description  ,} = req.body;
+    const { title, description } = req.body;
 
-    // Ensure req.files exists and contains videoFile
     if (!req.files || !req.files.videoFile || req.files.videoFile.length === 0) {
         throw new ApiError(400, "Video file is required");
     }
 
-    const video = req.files.videoFile[0]; 
-    console.log("Video File:", video);
+    const video = req.files.videoFile[0];
 
-    // Upload video to Cloudinary
     const uploadedVideo = await uplodeOncludeinary(video.path, "video");
     if (!uploadedVideo) {
         throw new ApiError(400, "Video upload to Cloudinary failed");
     }
- 
-    const duration = await getVideoDurationInSeconds(video.path);
 
-    let thumbnailUrl = "";
-    if (req.files.thumbnail && req.files.thumbnail.length > 0) {
-        const thumbnail = req.files.thumbnail[0];
-        console.log("Thumbnail File:", thumbnail);
-
-        const uploadedThumbnail = await uplodeOncludeinary(thumbnail.path, "image");
-        if (!uploadedThumbnail) {
-            throw new ApiError(400, "Thumbnail upload to Cloudinary failed");
-        }
-
-        thumbnailUrl = uploadedThumbnail.url;
-        if (fs.existsSync(thumbnail.path)) {
-            fs.unlinkSync(thumbnail.path);
+    let duration = 0;
+    try {
+        duration = await getVideoDurationInSeconds(video.path);
+        console.log("Duration fetched:", duration);
+    } catch (err) {
+        console.error("Failed to get duration:", err);
     }
 
     if (fs.existsSync(video.path)) {
         fs.unlinkSync(video.path);
-    } // Delete video file from local storage
+    }
 
-    // Create a new video document
+    let thumbnailUrl = "";
+    if (req.files.thumbnail && req.files.thumbnail.length > 0) {
+        const thumbnail = req.files.thumbnail[0];
+        const uploadedThumbnail = await uplodeOncludeinary(thumbnail.path, "image");
+        if (!uploadedThumbnail) {
+            throw new ApiError(400, "Thumbnail upload to Cloudinary failed");
+        }
+        thumbnailUrl = uploadedThumbnail.url;
+
+        if (fs.existsSync(thumbnail.path)) {
+            fs.unlinkSync(thumbnail.path);
+        }
+    }
+
     const newVideo = await Video.create({
         title,
         description,
@@ -156,8 +157,8 @@ const publishAVideo = asyncHandler(async (req, res) => {
     return res.status(200).json(
         new ApiResponse(200, newVideo, "Video is published successfully")
     );
-}  
-})
+});
+
 const getVideoById = asyncHandler(async (req, res) => {
     const { videoId } = req.params;
 
@@ -177,10 +178,9 @@ const getVideoById = asyncHandler(async (req, res) => {
     if (!updatedVideo) {
         throw new ApiError(404, "Video not found");
     }
-    
-    const duration = await getVideoDurationInSeconds(updatedVideo.duration);
+
     return res.status(200).json(
-        new ApiResponse(200, {updatedVideo, duration}, "Video retrieved successfully")
+        new ApiResponse(200, updatedVideo, "Video retrieved successfully")
     );
 });
 

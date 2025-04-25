@@ -4,7 +4,7 @@ import ApiResponse from "../utils/ApiResponse.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import { Like } from "../models/like.model.js";
 import { Comment } from "../models/coment.model.js"; 
-import { Video } from "../models/video.model.js"; 
+
 
 const videoLike = asyncHandler(async (req, res) => {
     const { videoId } = req.params;
@@ -76,7 +76,7 @@ const getLikedvideo = asyncHandler(async (req, res) => {
             video: { $exists: true } // ✅ Ensures only video likes are retrieved
         }).populate({
             path: "video",
-            select: "title description thumbnail views createdAt",
+            select: "title description thumbnail views createdAt duration ",
         });
     
         if (!likedVideos.length) {
