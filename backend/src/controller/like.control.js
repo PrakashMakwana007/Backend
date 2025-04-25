@@ -3,7 +3,8 @@ import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import { Like } from "../models/like.model.js";
-import { Comment } from "../models/coment.model.js"; // ✅ Fixed import
+import { Comment } from "../models/coment.model.js"; 
+import { Video } from "../models/video.model.js"; 
 
 const videoLike = asyncHandler(async (req, res) => {
     const { videoId } = req.params;
@@ -23,20 +24,21 @@ const videoLike = asyncHandler(async (req, res) => {
         if (!disliked) {
             throw new ApiError(400, "Error disliking video");
         }
-        return res.status(200).json(new ApiResponse(200, false, "Video disliked"));
+        const likeCount = await Like.countDocuments({ video: videoId });
+        return res.status(200).json(new ApiResponse(200, { isLiked: false, likeCount }, "Video disliked"));
     } else {
         const liked = await Like.create({ video: videoId, likedBy: userId });
         if (!liked) {
             throw new ApiError(400, "Error liking video");
         }
-        return res.status(200).json(new ApiResponse(200, true, "Video liked successfully"));
+        const likeCount = await Like.countDocuments({ video: videoId });
+        return res.status(200).json(new ApiResponse(200, { isLiked: true, likeCount }, "Video liked successfully"));
     }
 });
-
 const commentLike = asyncHandler(async (req, res) => {
     const { commentId } = req.params;
     const userId = req.user?._id;
-
+     console.log("comeent  and  userid",userId, commentId)
     if (!userId) {
         throw new ApiError(400, "User ID is invalid");
     }
@@ -85,4 +87,24 @@ const getLikedvideo = asyncHandler(async (req, res) => {
     });
     
 
-export { videoLike, commentLike, getLikedvideo };
+    const getlikeStatus = asyncHandler(async(req,res)=>{
+        const { videoId } = req.params;
+        const userId = req.user._id;
+      
+        // Validate IDs
+        if (!mongoose.Types.ObjectId.isValid(videoId)) {
+          throw new ApiError(400, "Invalid video ID");
+        }
+      
+        // Check if user liked the video
+        const isLiked = await Like.exists({ video: videoId, likedBy: userId });
+      
+        // Get total likes for the video
+        const likeCount = await Like.countDocuments({ video: videoId });
+      
+        return res.status(200).json(
+          new ApiResponse(200, { isLiked: !!isLiked, likeCount }, "Like status fetched")
+        );
+    })
+
+export { videoLike, commentLike, getLikedvideo , getlikeStatus };

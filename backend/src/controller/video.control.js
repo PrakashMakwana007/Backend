@@ -5,82 +5,105 @@ import mongoose from "mongoose"
 import {uplodeOncludeinary} from "../utils/cludeinary.js"
 import asyncHandler from "../utils/asyncHandler.js"
 import fs from "fs"
-
-
+import { getVideoDurationInSeconds } from "get-video-duration";
 
 
 
 const getAllVideos = asyncHandler(async (req, res) => {
-    const { page = 1, limit = 10, query, sortBy="createdAt", sortType="desc", userId } = req.query
-      
+    const { page = 1, limit = 10, query, sortBy = "createdAt", sortType = "desc", userId } = req.query;
 
-    const pageNumber = parseInt(page)
-    const limitNumber = parseInt(limit)
+    const pageNumber = parseInt(page);
+    const limitNumber = parseInt(limit);
 
+    const videoMatch = {};
+    if (query) {
+        videoMatch.title = { $regex: query, $options: "i" };
+    }
 
-    try {
-        const video = {}
-         if(query){
-            video.title = {
-            $regex: query, 
-            $options: "i" 
-            }
-       }
-       console.log("qurey",query)
-      
-       if (userId) {
+    if (userId) {
         if (!mongoose.Types.ObjectId.isValid(userId)) {
             throw new ApiError(400, "Invalid user ID format");
         }
-        video.owner = new mongoose.Types.ObjectId(userId);
+        videoMatch.owner = new mongoose.Types.ObjectId(userId);
     }
 
-    console.log("Query:", query);
-    console.log("UserID:", userId);
+    const sort = {};
+    sort[sortBy] = sortType === "desc" ? -1 : 1;
 
-       const sort ={}
-       sort[sortBy] =sortType==="desc"?-1:1; 
+    const videos = await Video.aggregate([
+        { $match: videoMatch },
+        { $sort: sort },
+        { $skip: (pageNumber - 1) * limitNumber },
+        { $limit: limitNumber },
 
-       const videos =  await Video.aggregate([
-           {
-            $match:video
-           },
-           {
-             $sort:sort
-           },
-           {$project:{
-              title:1,
-              description:1,
-              views: 1,
-              owner: 1,
-              duration: 1,
-              createdAt: 1
-             }
-           },
-           {
-            $limit:limitNumber
-           },
-           {
-            $skip:(pageNumber -1)*limitNumber
-           }
-         
-       ])
+        // Join with user
+        {
+            $lookup: {
+                from: "users",
+                localField: "owner",
+                foreignField: "_id",
+                as: "ownerDetails"
+            }
+        },
+        {
+            $unwind: "$ownerDetails"
+        },
 
-       if(!videos.length){
-        throw new ApiError(400 ,"Videos do not exist")
-       }
+        // Join with likes
+        {
+            $lookup: {
+                from: "likes",
+                let: { videoId: "$_id" },
+                pipeline: [
+                    { $match: { $expr: { $eq: ["$video", "$$videoId"] } } }
+                ],
+                as: "likes"
+            }
+        },
 
-       const totalVideo = await Video.countDocuments(video)
-       
+        // Join with comments
+        {
+            $lookup: {
+                from: "comments",
+                let: { videoId: "$_id" },
+                pipeline: [
+                    { $match: { $expr: { $eq: ["$video", "$$videoId"] } } }
+                ],
+                as: "comments"
+            }
+        },
 
-     return res.status(200).json(
-        new ApiResponse(200,{videos, totalVideo,page:pageNumber , limit:limitNumber})
-     )
+        // Project the required fields
+        {
+            $project: {
+                title: 1,
+                description: 1,
+                views: 1,
+                createdAt: 1,
+                duration: 1,
+                videoUrl: "$videoFile",
+                thumbnail: 1,
 
-    } catch (error) {
-        throw new ApiError(400 ,"Videos do not exist")
+                owner: "$ownerDetails._id",
+                ownerName: "$ownerDetails.username",
+                ownerAvatar: "$ownerDetails.avatar",
+
+                likesCount: { $size: "$likes" },
+                commentsCount: { $size: "$comments" }
+            }
+        }
+    ]);
+
+    if (!videos.length) {
+        throw new ApiError(404, "Videos do not exist");
     }
-}) 
+
+    const totalVideo = await Video.countDocuments(videoMatch);
+
+    return res.status(200).json(
+        new ApiResponse(200, { videos, totalVideo, page: pageNumber, limit: limitNumber })
+    );
+});
 
 const publishAVideo = asyncHandler(async (req, res) => {
     const { title, description  ,} = req.body;
@@ -98,6 +121,8 @@ const publishAVideo = asyncHandler(async (req, res) => {
     if (!uploadedVideo) {
         throw new ApiError(400, "Video upload to Cloudinary failed");
     }
+ 
+    const duration = await getVideoDurationInSeconds(video.path);
 
     let thumbnailUrl = "";
     if (req.files.thumbnail && req.files.thumbnail.length > 0) {
@@ -124,6 +149,7 @@ const publishAVideo = asyncHandler(async (req, res) => {
         description,
         thumbnail: thumbnailUrl,
         videoFile: uploadedVideo.url,
+        duration,
         owner: req.user._id
     });
 
@@ -132,7 +158,6 @@ const publishAVideo = asyncHandler(async (req, res) => {
     );
 }  
 })
-
 const getVideoById = asyncHandler(async (req, res) => {
     const { videoId } = req.params;
 
@@ -141,22 +166,24 @@ const getVideoById = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Invalid video ID format");
     }
 
-   
-    // const updatedVideo = await Video.findByIdAndUpdate(
-    //     videoId, 
-    //     { $inc: { views: 1 } }, 
-    //     { new: true }
-    // ).populate("owner", "username avatar");
+    // Fetch the video by ID and increment the views count
+    const updatedVideo = await Video.findByIdAndUpdate(
+        videoId,
+        { $inc: { views: 1 } },
+        { new: true } // To return the updated video
+    ).populate("owner", "username avatar");
 
-    // // If video not found
-    // if (!updatedVideo) {
-    //     throw new ApiError(404, "Video not found");
-    // }
-
+    // If video not found
+    if (!updatedVideo) {
+        throw new ApiError(404, "Video not found");
+    }
+    
+    const duration = await getVideoDurationInSeconds(updatedVideo.duration);
     return res.status(200).json(
-        new ApiResponse(200, /*updatedVideo*/"Video retrieved successfully")
+        new ApiResponse(200, {updatedVideo, duration}, "Video retrieved successfully")
     );
-})
+});
+
 
 const updateVideo = asyncHandler(async (req, res) => {
     const { videoId } = req.params;

@@ -11,9 +11,8 @@ import mongoose from "mongoose"
 
 const registeruser = asyncHandler(async (req ,res) =>{
    const {username , email , password , fullname} = req.body
-    console.log("email :" ,email)
-    console.log(req.body)
-
+    console.log('Received files:', req.files);
+    console.log('Received body:', req.body); 
     if (
         [username,email,password,fullname].some((filed)=> 
         filed?.trim()==="")
@@ -29,11 +28,12 @@ const registeruser = asyncHandler(async (req ,res) =>{
     }
     
    const avatarLocalpath = req.files?.avatar[0]?.path
-   //const coverImagelocalpath = req.files?.coverImage[0]?.path
+
    console.log("avtarlocalpath and cocver ",avatarLocalpath )
+
       let coverImagelocalpath;
    if(req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.lenth >0 ){
-       coverImagelocalpath = req.files.coverImage.path
+       coverImagelocalpath = req.files.coverImage[0].path
    }
 
    if(!avatarLocalpath){

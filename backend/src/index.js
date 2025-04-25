@@ -1,24 +1,20 @@
 import dotenv from "dotenv";
-import {app} from "./app.js"
-import path from "path"
-
-
-
-dotenv.config({
-     path: "../.env"
-    });
-
-
+import { app } from "./app.js";
+import path from "path";
 import connectDB from "./db/index.js";
 
+
+dotenv.config({ path: path.resolve(process.cwd(), ".env") });
+
+console.log("🌍 Starting server...");
+
 connectDB()
-.then(()=>{
-    app.listen(process.env.PORT || 8000 ,() =>{
-        console.log(`Server is running on port ${process.env.PORT || 8000}`);
-        console.log("PORT:", process.env.PORT);
- 
-    })
-})
-.catch((err)=>{
-    console.log("Mongo connion  err !!! ",err);
-})
+  .then(() => {
+    const PORT = process.env.PORT || 8000;
+    app.listen(PORT, () => {
+      console.log(`🚀 Server is running on port ${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error("❌ MongoDB connection error:", err);
+  });

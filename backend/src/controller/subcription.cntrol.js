@@ -4,7 +4,6 @@ import ApiResponse from "../utils/ApiResponse.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import { Subscription } from "../models/subscription.model.js";
 
-
 const toogleSubcribe = asyncHandler(async (req, res) => {
     const { channelId } = req.params;
     const userId = req.user._id;
@@ -13,38 +12,52 @@ const toogleSubcribe = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Invalid Channel ID");
     }
 
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-        throw new ApiError(400, "Invalid User ID");
-    }
-
     const existingSubscription = await Subscription.findOne({
         subscriber: userId,
-        channel: channelId, 
+        channel: channelId,
     });
 
-    console.log("chanel id :" ,channelId)
-    console.log("subscriber id :" ,userId)
-    
     if (existingSubscription) {
-        const deleted = await Subscription.findByIdAndDelete(existingSubscription._id);
-        if (!deleted) {
-            throw new ApiError(400, "Failed to unsubscribe. Subscription not found.");
-        }
-        return res.status(200).json(new ApiResponse(200, false, "Unsubscribed successfully"));
+        await Subscription.findByIdAndDelete(existingSubscription._id);
+        const subscriptionCount = await Subscription.countDocuments({ channel: channelId });
+
+        return res.status(200).json(
+            new ApiResponse(
+                200,
+                {
+                    subscribe: false,
+                    subscriberCount: subscriptionCount
+                },
+                "Unsubscribed successfully"
+            )
+        );
     } else {
-        const newSubscription = await Subscription.create({
-            subscriber: userId,
-            channel: channelId, // ✅ Fixed typo from `chanel`
-        });
-
-        if (!newSubscription) {
-            throw new ApiError(400, "Subscription failed");
+        try {
+            await Subscription.create({
+                subscriber: userId,
+                channel: channelId,
+            });
+        } catch (error) {
+            if (error.code === 11000) {
+                throw new ApiError(400, "You are already subscribed to this channel");
+            }
+            throw error;
         }
 
-        return res.status(200).json(new ApiResponse(200, true, "Subscribed successfully"));
+        const subscriptionCount = await Subscription.countDocuments({ channel: channelId });
+
+        return res.status(200).json(
+            new ApiResponse(
+                200,
+                {
+                    subscribe: true,
+                    subscriberCount: subscriptionCount
+                },
+                "Subscribed successfully"
+            )
+        );
     }
 });
-
 
 const userChanelsubscribe = asyncHandler(async (req, res) => {
     const { channelId } = req.params;
@@ -60,9 +73,13 @@ const userChanelsubscribe = asyncHandler(async (req, res) => {
         throw new ApiError(404, "No subscribers found");
     }
 
-    return res.status(200).json(new ApiResponse(200, subscribers, "Subscribers retrieved successfully"));
-});
+    const subscriptionCount = await Subscription.countDocuments({ channel: channelId });
 
+    return res.status(200).json(new ApiResponse(200, {
+        subscribed: true,
+        subscriptionCount: subscriptionCount
+    }, "Subscribers retrieved successfully"));
+});
 
 const getsubscribedChannel = asyncHandler(async (req, res) => {
     const { subscriberId } = req.params;
@@ -72,7 +89,7 @@ const getsubscribedChannel = asyncHandler(async (req, res) => {
     }
 
     const list = await Subscription.find({ subscriber: subscriberId })
-        .populate("channel", "username email"); 
+        .populate("channel", "username email");
 
     if (!list || list.length === 0) {
         throw new ApiError(404, "No subscriptions found for this user");
