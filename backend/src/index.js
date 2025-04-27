@@ -4,8 +4,10 @@ import path from "path";
 import connectDB from "./db/index.js";
 
 
-dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 
+dotenv.config({path: './.env'});
+
+// dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 console.log("🌍 Starting server...");
 
 connectDB()
