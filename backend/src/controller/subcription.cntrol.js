@@ -95,8 +95,13 @@ const getsubscribedChannel = asyncHandler(async (req, res) => {
     if (!list || list.length === 0) {
         throw new ApiError(404, "No subscriptions found for this user");
     }
+    const channelsWithSubscriberCount = list.map(sub => ({
+        ...sub.channel._doc, // Include all the populated channel data
+        subscribersCount: sub.channel.subscribersCount, // Add subscribersCount from the populated channel
+    }));
 
-    return res.status(200).json(new ApiResponse(200, list, "Subscribed channels retrieved successfully"));
+
+    return res.status(200).json(new ApiResponse(200, channelsWithSubscriberCount, "Subscribed channels retrieved successfully"));
 });
 
 export {

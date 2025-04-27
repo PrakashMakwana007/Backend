@@ -1,9 +1,9 @@
-import {Video} from "../models/video.model"
-import {Subscription} from "../models/subscription.model"
+import {Video} from "../models/video.model.js"
+import {Subscription} from "../models/subscription.model.js"
 import {Like} from "../models/like.model.js"
-import {asyncHandler} from "../utils/asyncHandler.js"
-import {ApiError} from "../utils/ApiError.js"
-import {ApiResponse} from "../utils/ApiResponse.js"
+import asyncHandler from "../utils/asyncHandler.js"
+import ApiError from "../utils/ApiError.js"
+import ApiResponse from "../utils/ApiResponse.js"
 import mongoose, { Query } from "mongoose"
 
 
@@ -36,7 +36,8 @@ const getchanelStat  = asyncHandler(async(req,res)=>{
        
     const totalSuscriber = await Subscription.countDocuments({chanel :chanelId})
 
-    const totalLike = await Like.countDocuments({videoOwner :chanelId})
+    const totalLike = await Like.countDocuments({ video: { $in: videostats.map(v => v._id) }})
+
 
     const stats = videostats.length >0 ? videostats[0]:{
         totalViews :0 ,

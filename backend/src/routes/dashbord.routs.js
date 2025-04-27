@@ -11,6 +11,9 @@ import { getChanelVideo,
 
  router.use(verifyJWT)
 
- router.route("/stats").get(getchanelStat)
- router.route("/Videos").get(getChanelVideo)
+ router.route("/stats/:chanelId").get(getchanelStat)
+ router.route("/videos/:chanelId").get(getChanelVideo)
  
+ 
+
+export default router
