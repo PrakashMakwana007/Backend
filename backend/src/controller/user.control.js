@@ -9,64 +9,66 @@ import mongoose from "mongoose"
 
 
 
-const registeruser = asyncHandler(async (req ,res) =>{
-   const {username , email , password , fullname} = req.body
+const registeruser = asyncHandler(async (req, res) => {
+    const { username, email, password, fullname } = req.body;
+
     console.log('Received files:', req.files);
-    console.log('Received body:', req.body); 
-    if (
-        [username,email,password,fullname].some((filed)=> 
-        filed?.trim()==="")
-    ){
-        throw new ApiError(400 ,"All fields are required")
-    }
-    
-   const exitUser =   await User.findOne({
-        $or : [{ username },{ email }]
-    })
-    if(exitUser){
-        throw new ApiError(409 , "user alrady exit ")
-    }
-    
-   const avatarLocalpath = req.files?.avatar[0]?.path
+    console.log('Received body:', req.body);
 
-   console.log("avtarlocalpath and cocver ",avatarLocalpath )
-
-      let coverImagelocalpath;
-   if(req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length >0 ){
-       coverImagelocalpath = req.files.coverImage[0].path
-   }
-
-   if(!avatarLocalpath){
-    throw new ApiError(400 , "avatar is reqiried")
-   }
-    
-  const avatar = await uplodeOncludeinary(avatarLocalpath)
-  const coverImage = await uplodeOncludeinary(coverImagelocalpath)
-
-   if(!avatar){
-    throw new ApiError(500 , "avatar not  uploded ")
-   }
-
-   const user = await User.create({
-    username : username.toLowerCase(),
-    email,
-    avatar : avatar.url,
-    coverImage : coverImage?.url || "",
-    password,
-    fullname
-   })
-
-    const cratedUser = await User.findById(user._id).select(
-        "-password  -refreshTokens"
-    )
-    if(!cratedUser){
-        throw new ApiError(500 , "user not  created ")
+    // Validate required fields
+    if ([username, email, password, fullname].some((field) => field?.trim() === "")) {
+        throw new ApiError(400, "All fields are required");
     }
 
-     return res.status(201).json(
-        new ApiResponse(200 , "user created success " , cratedUser)
-     )
-})
+    // Check if user already exists
+    const existingUser = await User.findOne({ $or: [{ username }, { email }] });
+    if (existingUser) {
+        throw new ApiError(409, "User already exists");
+    }
+
+    // Handling file paths
+    const avatarLocalPath = req.files?.avatar[0]?.path;
+    console.log("Avatar local path:", avatarLocalPath);
+
+    let coverImageLocalPath;
+    if (req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) {
+        coverImageLocalPath = req.files.coverImage[0].path;
+    }
+
+    // Ensure avatar is uploaded
+    if (!avatarLocalPath) {
+        throw new ApiError(400, "Avatar is required");
+    }
+
+    // Upload to Cloudinary
+    const avatar = await uploadOnCloudinary(avatarLocalPath);
+    const coverImage = await uploadOnCloudinary(coverImageLocalPath);
+
+    if (!avatar) {
+        throw new ApiError(500, "Avatar not uploaded");
+    }
+
+    // Create the new user
+    const user = await User.create({
+        username: username.toLowerCase(),
+        email,
+        avatar: avatar.url,
+        coverImage: coverImage?.url || "",
+        password,
+        fullname,
+    });
+
+    // Find the created user and exclude sensitive information
+    const createdUser = await User.findById(user._id).select("-password -refreshTokens");
+    if (!createdUser) {
+        throw new ApiError(500, "User not created");
+    }
+
+    return res.status(201).json(
+        new ApiResponse(200, "User created successfully", createdUser)
+    );
+});
+
 
 const generateAccessTokenAndRefreshToken = async (userId) => {
     try {
