@@ -32,7 +32,7 @@ const registeruser = asyncHandler(async (req ,res) =>{
    console.log("avtarlocalpath and cocver ",avatarLocalpath )
 
       let coverImagelocalpath;
-   if(req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.lenth >0 ){
+   if(req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length >0 ){
        coverImagelocalpath = req.files.coverImage[0].path
    }
 
