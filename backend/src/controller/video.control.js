@@ -2,7 +2,7 @@ import {Video} from "../models/video.model.js"
 import ApiError from "../utils/ApiError.js"
 import ApiResponse  from "../utils/ApiResponse.js"
 import mongoose from "mongoose"
-import {uplodeOncludeinary} from "../utils/cludeinary.js"
+import {uploadOnCloudinary} from "../utils/cludeinary.js"
 import asyncHandler from "../utils/asyncHandler.js"
 import fs from "fs"
 import { getVideoDurationInSeconds } from "get-video-duration";
@@ -114,7 +114,7 @@ const publishAVideo = asyncHandler(async (req, res) => {
 
     const video = req.files.videoFile[0];
 
-    const uploadedVideo = await uplodeOncludeinary(video.path, "video");
+    const uploadedVideo = await uploadOnCloudinary(video.path, "video");
     if (!uploadedVideo) {
         throw new ApiError(400, "Video upload to Cloudinary failed");
     }
@@ -134,7 +134,7 @@ const publishAVideo = asyncHandler(async (req, res) => {
     let thumbnailUrl = "";
     if (req.files.thumbnail && req.files.thumbnail.length > 0) {
         const thumbnail = req.files.thumbnail[0];
-        const uploadedThumbnail = await uplodeOncludeinary(thumbnail.path, "image");
+        const uploadedThumbnail = await uploadOnCloudinary(thumbnail.path, "image");
         if (!uploadedThumbnail) {
             throw new ApiError(400, "Thumbnail upload to Cloudinary failed");
         }
@@ -202,7 +202,7 @@ const updateVideo = asyncHandler(async (req, res) => {
 
     let thumbnailUrl = video.thumbnail;
     if (req.file) {
-        const uploadedThumbnail = await uplodeOncludeinary(req.file.path, "image");
+        const uploadedThumbnail = await uploadOnCloudinary(req.file.path, "image");
         if (!uploadedThumbnail) {
             throw new ApiError(400, "Thumbnail upload to Cloudinary failed");
         }
