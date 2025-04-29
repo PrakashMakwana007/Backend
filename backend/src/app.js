@@ -7,6 +7,9 @@ const app = express();
 
 const allowedOrigins = [
     'http://localhost:5173',
+    'http://localhost:5173',
+    'https://videotube-ivory.vercel.app',
+     /\.vercel\.app$/,
     'https://videotube-ivory.vercel.app',
     'https://videotube-git-main-makwana-prakashs-projects.vercel.app',
     'https://videotube-e294kjir7-makwana-prakashs-projects.vercel.app'
