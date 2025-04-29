@@ -7,9 +7,9 @@ const app = express();
 
 const allowedOrigins = [
     'http://localhost:5173',
-   ' https://videotube2-liart.vercel.app',
-   ' https://videotube2-git-main-makwana-prakashs-projects.vercel.app',
-   ' https://videotube2-r7csibgni-makwana-prakashs-projects.vercel.app'
+    'https://videotube-omega.vercel.app',
+    'https://videotube-git-main-makwana-prakashs-projects.vercel.app',
+    'https://videotube-3ex1fbzz6-makwana-prakashs-projects.vercel.app'
 ] 
 
 app.use(cors({
