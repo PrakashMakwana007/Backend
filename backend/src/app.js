@@ -7,10 +7,10 @@ const app = express();
 
 const allowedOrigins = [
     'http://localhost:5173',
-    'https://frontend-jade-two-46.vercel.app',
-    'https://frontend-git-main-makwana-prakashs-projects.vercel.app',
-    'https://frontend-ie3l1lcrm-makwana-prakashs-projects.vercel.app'
-];
+   ' https://videotube2-liart.vercel.app',
+   ' https://videotube2-git-main-makwana-prakashs-projects.vercel.app',
+   ' https://videotube2-r7csibgni-makwana-prakashs-projects.vercel.app'
+] 
 
 app.use(cors({
     origin: function (origin, callback) {
